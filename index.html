@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NRD Feed Schedule Builder</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1d4e89">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+:root{--bd:#d0d5dd;--ink:#1f2937;--mut:#6b7280;--acc:#1d4e89;--ok:#15803d;--bad:#b91c1c;--bg:#f5f6f8}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Arial,sans-serif;font-size:13px;color:var(--ink);background:var(--bg)}
+header{background:var(--acc);color:#fff;padding:10px 14px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+header h1{font-size:16px;margin:0 12px 0 0;font-weight:600}
+header label{display:flex;gap:6px;align-items:center;font-size:12px}
+header input,header select{padding:5px 6px;border:0;border-radius:4px;font-size:13px}
+nav{display:flex;gap:4px;padding:8px 14px 0;background:#fff;border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:5;overflow-x:auto}
+nav button{border:0;background:none;padding:9px 14px;font-size:13px;font-weight:600;color:var(--mut);border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--acc);border-bottom-color:var(--acc)}
+main{padding:14px;max-width:1500px;margin:0 auto}
+.tab{display:none}.tab.on{display:block}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.btn{border:1px solid var(--bd);background:#fff;padding:6px 11px;border-radius:5px;cursor:pointer;font-size:12.5px;color:var(--ink)}
+.btn:hover{border-color:var(--acc)}
+.btn.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn.sm{padding:3px 8px;font-size:12px}
+.x{border:0;background:none;color:#9ca3af;cursor:pointer;font-size:15px;padding:0 4px}
+.x:hover{color:var(--bad)}
+.hint{color:var(--mut);font-size:12px}
+.wrap{overflow-x:auto;background:#fff;border:1px solid var(--bd);border-radius:6px}
+table.g{border-collapse:collapse;width:100%}
+table.g th{background:#eef1f5;font-weight:600;font-size:12px;padding:6px 4px;border-bottom:1px solid var(--bd);text-align:center;white-space:nowrap}
+table.g td{padding:2px 3px;border-bottom:1px solid #eef0f3;text-align:center}
+table.g input,table.g select{width:100%;padding:4px 5px;border:1px solid transparent;border-radius:3px;font-size:12.5px;background:transparent;text-align:center;font-family:inherit}
+table.g input:focus,table.g select:focus{border-color:var(--acc);background:#fff;outline:0}
+table.g td.l input,table.g td.l select{text-align:left}
+input.ov{background:#fff4c2!important}
+.n{min-width:62px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(560px,1fr));gap:14px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+.side h2{font-size:13px;margin:4px 0 8px;padding:6px 10px;background:#fff2cc;border:1px solid #e9d48a;border-radius:5px;text-align:center}
+.card{background:#fff;border:1px solid var(--bd);border-radius:6px;margin-bottom:14px;overflow:hidden}
+.ch{padding:7px 10px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.badge{font-size:11.5px;padding:2px 8px;border-radius:10px;background:#fff;font-weight:600}
+.badge.ok{color:var(--ok)}.badge.bad{color:var(--bad)}
+tfoot td{font-weight:700;background:#f8fafc;padding:6px 3px!important}
+.cf{display:flex;gap:8px;align-items:center;padding:7px 10px;border-top:1px solid #eef0f3;flex-wrap:wrap}
+.cf input{padding:4px 6px;border:1px solid var(--bd);border-radius:4px;color:#d00;font-weight:600;width:170px}
+.panel{background:#fff;border:1px solid var(--bd);border-radius:6px;padding:12px;margin-bottom:14px}
+.panel h3{margin:0 0 8px;font-size:13.5px}
+textarea{width:100%;font-family:Consolas,monospace;font-size:12px;border:1px solid var(--bd);border-radius:4px;padding:6px}
+#msg{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:9px 16px;border-radius:6px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw;text-align:center}
+#msg.on{opacity:.95}
+#imgPrev{max-width:100%;border:1px solid var(--bd);background:#fff}
+#xl{overflow:auto;background:#fff;border:1px solid var(--bd);padding:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:#eef1f5;border-radius:12px;padding:3px 9px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>NRD Feed Schedule Builder</h1>
+  <label>Date <input type="date" id="hDate"></label>
+  <label>Shift <select id="hShift"><option>A</option><option>B</option><option>C</option></select></label>
+  <label>NRD In-charge <input id="hInc" placeholder="Name" style="width:150px"></label>
+</header>
+<nav>
+  <button data-t="inv" class="on">1 · Inventory</button>
+  <button data-t="plants">2 · Plant Feed</button>
+  <button data-t="out">3 · Output</button>
+  <button data-t="hist">Saved shifts</button>
+</nav>
+<main>
+
+<!-- INVENTORY -->
+<section class="tab on" id="t-inv">
+  <div class="bar">
+    <button class="btn pri" id="invAdd">+ Add face / stock</button>
+    <button class="btn" id="invPasteBtn">Paste from Excel</button>
+    <button class="btn" id="invClear">Clear inventory</button>
+    <span class="hint">All available faces and stockpiles with their quality. Edits flow through to every plant using that face.</span>
+  </div>
+  <div class="panel" id="pastePanel" style="display:none">
+    <h3>Paste from Excel</h3>
+    <div class="hint" style="margin-bottom:6px">Copy rows with columns in this order: <b>Area/Face, Ore Type, Fe, SiO2, Al2O3, P, K2O</b> (optional: Mine, Type). Header rows are skipped automatically.</div>
+    <textarea id="pasteTxt" rows="6" placeholder="H6-672 (face)	FO	62.00	1.80	3.70	0.090	0.030"></textarea>
+    <div class="bar" style="margin-top:8px">
+      <button class="btn pri" id="pasteAppend">Add to inventory</button>
+      <button class="btn" id="pasteReplace">Replace inventory</button>
+      <button class="btn" id="pasteCancel">Cancel</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <table class="g" id="invT">
+      <thead><tr><th>#</th><th style="min-width:140px">Area / Face / Stock</th><th>Type</th><th>Mine</th><th>Ore Type</th><th class="n">Fe</th><th class="n">SiO2</th><th class="n">Al2O3</th><th class="n">P</th><th class="n">K2O</th><th style="min-width:110px">Remarks</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- PLANTS -->
+<section class="tab" id="t-plants">
+  <div class="bar">
+    <button class="btn" id="clrPlants">Clear all plants</button>
+    <button class="btn" id="loadSample">Load sample (18-Nov C shift)</button>
+    <span class="hint">Pick a face from the dropdown — ore type and quality fill from inventory. Overwrite any value for this plant only (shown <span style="background:#fff4c2;padding:0 4px">yellow</span>); clear it to go back to inventory.</span>
+  </div>
+  <div class="grid">
+    <div class="side"><h2>Departmental Plant</h2><div id="pL"></div></div>
+    <div class="side"><h2>Out Sourced Plant</h2><div id="pR"></div></div>
+  </div>
+</section>
+
+<!-- OUTPUT -->
+<section class="tab" id="t-out">
+  <div class="panel">
+    <h3>Image (to share)</h3>
+    <div class="bar">
+      <button class="btn pri" id="imgShare">Share image</button>
+      <button class="btn" id="imgDl">Download PNG</button>
+      <button class="btn" id="imgCopy">Copy image</button>
+      <span class="hint">If a button is blocked here, long-press / right-click the image → Save or Copy.</span>
+    </div>
+    <img id="imgPrev" alt="Schedule image">
+  </div>
+  <div class="panel">
+    <h3>Sheet format (paste into the online Excel schedule)</h3>
+    <div class="bar">
+      <button class="btn pri" id="xlCopy">Copy for Excel (formatted)</button>
+      <button class="btn" id="tsvCopy">Copy values only</button>
+      <label class="hint"><input type="checkbox" id="incDS" checked> Include Date &amp; Shift columns</label>
+    </div>
+    <div id="xl"></div>
+    <details style="margin-top:8px"><summary class="hint">Tab-separated text (manual copy)</summary><textarea id="tsv" rows="8" readonly></textarea></details>
+  </div>
+</section>
+
+<!-- HISTORY -->
+<section class="tab" id="t-hist">
+  <div class="bar">
+    <button class="btn pri" id="hSave">Save this shift</button>
+    <button class="btn" id="hNext">Carry forward to next shift</button>
+    <span class="hint">Saved in this browser. "Carry forward" keeps the plant feed and moves to the next shift (C → next day A).</span>
+  </div>
+  <div class="wrap"><table class="g" id="histT"><thead><tr><th>Date</th><th>Shift</th><th>In-charge</th><th>Saved at</th><th></th></tr></thead><tbody></tbody></table></div>
+  <div class="panel" style="margin-top:14px">
+    <h3>Backup / move to another computer</h3>
+    <div class="bar"><button class="btn" id="bkOut">Show backup text</button><button class="btn" id="bkIn">Restore from text below</button></div>
+    <textarea id="bkTxt" rows="5" placeholder="Backup JSON appears here — copy it, or paste one here and press Restore"></textarea>
+  </div>
+</section>
+</main>
+<div id="msg"></div>
+
+<script>
+const AN=['Fe','SiO2','Al2O3','P','K2O'];
+const DEC={Fe:2,SiO2:2,Al2O3:2,P:3,K2O:3};
+const PL=[
+ {k:'wet',  n:'Wet Ckt. Plant',          s:'L',an:AN,              alt:1,c:'#d8e4bc'},
+ {k:'ndcmp',n:'NDCMP / DCMP STK',        s:'L',an:AN,              alt:1,c:'#b7dee8'},
+ {k:'iopph',n:'IOPP Plant (Hopper)',     s:'L',an:AN,              alt:1,c:'#bfbfbf'},
+ {k:'ioppj',n:'IOPP Plant (Jaw Crusher)',s:'L',an:AN,              alt:0,c:'#bfbfbf'},
+ {k:'csnim',n:'C&S Plant Feed NIM',      s:'R',an:AN.slice(0,4),   alt:0,c:'#ebf1de'},
+ {k:'metnim',n:'METSO Plant Feed NIM',   s:'R',an:AN.slice(0,4),   alt:0,c:'#c5d9f1'},
+ {k:'sandktm',n:'SANDVIK Plant Feed KTM',s:'R',an:AN.slice(0,4),   alt:0,c:'#ebf1de'},
+ {k:'metktm',n:'METSO Plant feed KTM',   s:'R',an:AN.slice(0,4),   alt:0,c:'#ebf1de'},
+];
+const KEY='fsb_state_v1',HKEY='fsb_hist_v1';
+const uid=()=>Math.random().toString(36).slice(2,9);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num=v=>{if(v===''||v==null)return null;const x=parseFloat(String(v).replace(',','.'));return isNaN(x)?null:x};
+const fmt=(v,a)=>{if(v==null||isNaN(v))return'';const m=10**DEC[a];return(Math.round(Number(v)*m+1e-7)/m).toFixed(DEC[a])};
+const fmtR=v=>v==null?'':(Math.round(v*100)/100).toString();
+function msg(t){const m=$('#msg');m.textContent=t;m.classList.add('on');clearTimeout(m._t);m._t=setTimeout(()=>m.classList.remove('on'),2600)}
+
+function seedInv(){return [
+ ['H6-672 (face)','FO',62,1.8,3.7,.09,.03,'NIM','Face'],
+ ['K-702/714','FO+HO',63.5,2.5,2.1,.11,.02,'KTM','Face'],
+ ['Jig SY','LO+FO',62,2.7,5.1,.1,.035,'NIM','Stock'],
+ ['P2-624','FO',60,3.5,4.7,.12,.03,'NIM','Face'],
+ ['K-690','BD',65,1.9,2,.09,.02,'KTM','Face'],
+ ['WP-516','BD',65,3.5,2.1,.07,.025,'NIM','Face'],
+ ['WP-528','FO+BD',62,5.3,2.5,.08,null,'NIM','Face'],
+ ['P4-658','FO',58,4.6,6.2,.12,null,'NIM','Face'],
+ ['DCMP STK','FO',63,2.8,2.7,.1,.025,'NIM','Stock'],
+].map(r=>({id:uid(),name:r[0],ore:r[1],Fe:r[2],SiO2:r[3],Al2O3:r[4],P:r[5],K2O:r[6],mine:r[7],kind:r[8],rem:''}))}
+function blankRows(n=3){return Array.from({length:n},()=>({fid:'',ratio:null,ov:{}}))}
+function guessShift(){const h=new Date().getHours();return h>=6&&h<14?'A':h>=14&&h<22?'B':'C'}
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function defState(){const p={};PL.forEach(x=>p[x.k]={rows:blankRows(),alt:''});return{date:today(),shift:guessShift(),inc:'',inv:seedInv(),plants:p}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.inv&&s.plants){PL.forEach(x=>{if(!s.plants[x.k])s.plants[x.k]={rows:blankRows(),alt:''}});return s}}catch(e){}return null}
+let S=load()||defState();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const inv=id=>S.inv.find(f=>f.id===id);
+
+/* ---------- header ---------- */
+function syncHeader(){$('#hDate').value=S.date;$('#hShift').value=S.shift;$('#hInc').value=S.inc}
+$('#hDate').oninput=e=>{S.date=e.target.value;save()};
+$('#hShift').onchange=e=>{S.shift=e.target.value;save()};
+$('#hInc').oninput=e=>{S.inc=e.target.value;save()};
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.t));
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));
+  if(t==='plants')renderPlants();if(t==='out')renderOut();if(t==='hist')renderHist();if(t==='inv')renderInv();
+}
+
+/* ---------- inventory ---------- */
+function renderInv(){
+  $('#invT tbody').innerHTML=S.inv.map((f,i)=>`<tr data-id="${f.id}">
+   <td class="hint">${i+1}</td>
+   <td class="l"><input data-f="name" value="${esc(f.name)}" placeholder="Face / stock name"></td>
+   <td><select data-f="kind">${['Face','Stock','Other'].map(o=>`<option${f.kind===o?' selected':''}>${o}</option>`).join('')}</select></td>
+   <td><select data-f="mine">${['NIM','KTM','—'].map(o=>`<option${f.mine===o?' selected':''}>${o}</option>`).join('')}</select></td>
+   <td><input data-f="ore" value="${esc(f.ore)}" style="min-width:70px"></td>
+   ${AN.map(a=>`<td><input data-f="${a}" inputmode="decimal" value="${f[a]==null?'':f[a]}"></td>`).join('')}
+   <td class="l"><input data-f="rem" value="${esc(f.rem)}"></td>
+   <td><button class="x" data-del title="Delete">✕</button></td></tr>`).join('')||`<tr><td colspan="12" class="hint" style="padding:14px">No faces yet — add or paste from Excel.</td></tr>`;
+}
+$('#invT').addEventListener('input',e=>{
+  const tr=e.target.closest('tr'),f=inv(tr?.dataset.id),k=e.target.dataset.f;if(!f||!k)return;
+  f[k]=AN.includes(k)?num(e.target.value):e.target.value;save();
+});
+$('#invT').addEventListener('change',e=>{const tr=e.target.closest('tr'),f=inv(tr?.dataset.id),k=e.target.dataset.f;if(f&&k&&e.target.tagName==='SELECT'){f[k]=e.target.value;save()}});
+$('#invT').addEventListener('click',e=>{
+  if(!e.target.hasAttribute('data-del'))return;
+  const id=e.target.closest('tr').dataset.id,f=inv(id);
+  const used=PL.filter(p=>S.plants[p.k].rows.some(r=>r.fid===id)).map(p=>p.n);
+  if(used.length&&!e.target.dataset.sure){e.target.dataset.sure=1;e.target.textContent='Sure?';msg(`${f.name} is used in: ${used.join(', ')}. Click again to delete.`);return}
+  S.inv=S.inv.filter(x=>x.id!==id);PL.forEach(p=>S.plants[p.k].rows.forEach(r=>{if(r.fid===id)r.fid=''}));save();renderInv();
+});
+$('#invAdd').onclick=()=>{S.inv.push({id:uid(),name:'',ore:'',Fe:null,SiO2:null,Al2O3:null,P:null,K2O:null,mine:'NIM',kind:'Face',rem:''});save();renderInv();const ins=document.querySelectorAll('#invT tbody tr:last-child input');ins[0]&&ins[0].focus()};
+$('#invClear').onclick=e=>{if(!e.target.dataset.sure){e.target.dataset.sure=1;e.target.textContent='Click again to clear';setTimeout(()=>{e.target.textContent='Clear inventory';delete e.target.dataset.sure},3000);return}
+  S.inv=[];PL.forEach(p=>S.plants[p.k].rows.forEach(r=>r.fid=''));save();renderInv();e.target.textContent='Clear inventory';delete e.target.dataset.sure};
+$('#invPasteBtn').onclick=()=>{$('#pastePanel').style.display='block';$('#pasteTxt').focus()};
+$('#pasteCancel').onclick=()=>{$('#pastePanel').style.display='none'};
+function parsePaste(t){
+  return t.split(/\r?\n/).map(l=>l.split(l.includes('\t')?'\t':',').map(x=>x.trim())).filter(c=>c.length>=3&&c[0]&&num(c[2])!=null)
+   .map(c=>({id:uid(),name:c[0],ore:c[1]||'',Fe:num(c[2]),SiO2:num(c[3]),Al2O3:num(c[4]),P:num(c[5]),K2O:num(c[6]),mine:/ktm|kata/i.test(c[7]||'')?'KTM':(c[7]?'NIM':(/^K-/i.test(c[0])?'KTM':'NIM')),kind:/stock|stk|sy/i.test((c[8]||'')+c[0])?'Stock':'Face',rem:''}));
+}
+function doPaste(replace){const rows=parsePaste($('#pasteTxt').value);if(!rows.length){msg('No valid rows found. Need Name, Ore, Fe, SiO2, …');return}
+  if(replace){S.inv=rows;PL.forEach(p=>S.plants[p.k].rows.forEach(r=>{if(!inv(r.fid)){const m=null;r.fid=''}}))}else S.inv.push(...rows);
+  save();renderInv();$('#pasteTxt').value='';$('#pastePanel').style.display='none';msg(`${rows.length} faces ${replace?'loaded':'added'}`)}
+$('#pasteAppend').onclick=()=>doPaste(false);$('#pasteReplace').onclick=()=>doPaste(true);
+
+/* ---------- plants ---------- */
+function rowData(r,p){const f=inv(r.fid)||{};const o={name:f.name||'',ore:r.ov.ore??f.ore??'',ratio:r.ratio};p.an.forEach(a=>o[a]=r.ov[a]!==undefined?r.ov[a]:f[a]);return o}
+function calc(p){const st=S.plants[p.k];let sr=0;const nu={},de={};p.an.forEach(a=>{nu[a]=0;de[a]=0});
+  st.rows.forEach(r=>{if(!r.fid||!r.ratio)return;const d=rowData(r,p);sr+=r.ratio;p.an.forEach(a=>{if(d[a]!=null){nu[a]+=r.ratio*d[a];de[a]+=r.ratio}})});
+  const avg={};p.an.forEach(a=>avg[a]=de[a]?nu[a]/de[a]:null);return{sr,avg,used:st.rows.filter(r=>r.fid).length}}
+function invOpts(sel){const g={};S.inv.forEach(f=>{const k=(f.mine||'—')+' · '+(f.kind||'Face');(g[k]=g[k]||[]).push(f)});
+  return `<option value="">— select —</option>`+Object.keys(g).sort().map(k=>`<optgroup label="${esc(k)}">${g[k].map(f=>`<option value="${f.id}"${f.id===sel?' selected':''}>${esc(f.name)}${f.Fe!=null?'  ('+fmt(f.Fe,'Fe')+')':''}</option>`).join('')}</optgroup>`).join('')}
+function card(p){
+  const st=S.plants[p.k];
+  const rows=st.rows.map((r,i)=>{const d=rowData(r,p),f=inv(r.fid);
+    return `<tr data-i="${i}"><td class="l" style="min-width:140px"><select data-f="fid">${invOpts(r.fid)}</select></td>
+    <td><input data-f="ore" value="${esc(d.ore)}" class="${r.ov.ore!==undefined?'ov':''}" style="min-width:62px"></td>
+    <td><input data-f="ratio" inputmode="decimal" value="${r.ratio??''}" style="min-width:48px;font-weight:600"></td>
+    ${p.an.map(a=>`<td><input data-f="${a}" inputmode="decimal" value="${d[a]==null?'':d[a]}" class="${r.ov[a]!==undefined?'ov':''}" placeholder="${f&&f[a]!=null?f[a]:''}"></td>`).join('')}
+    <td><button class="x" data-del title="Remove row">✕</button></td></tr>`}).join('');
+  return `<div class="card" data-p="${p.k}"><div class="ch" style="background:${p.c}"><span>${esc(p.n)}</span><span class="badge" id="bd-${p.k}"></span></div>
+  <div style="overflow-x:auto"><table class="g"><thead><tr><th>Area/Face</th><th>Ore Type</th><th>Ratio</th>${p.an.map(a=>`<th class="n">${a}</th>`).join('')}<th></th></tr></thead>
+  <tbody>${rows}</tbody><tfoot><tr id="tf-${p.k}"></tr></tfoot></table></div>
+  <div class="cf"><button class="btn sm" data-add>+ Row</button>${p.alt?`<span class="hint">Alternate Face</span><input data-alt list="dlFaces" value="${esc(st.alt)}">`:''}</div></div>`;
+}
+function updTot(p){const c=calc(p),tf=$('#tf-'+p.k);if(!tf)return;
+  tf.innerHTML=`<td colspan="2" style="text-align:right">Total / Avg =</td><td style="color:${c.used&&Math.abs(c.sr-100)>1e-6?'var(--bad)':'inherit'}">${fmtR(c.sr)}</td>${p.an.map(a=>`<td>${fmt(c.avg[a],a)}</td>`).join('')}<td></td>`;
+  const b=$('#bd-'+p.k);const ok=Math.abs(c.sr-100)<1e-6;b.className='badge '+(c.used?(ok?'ok':'bad'):'');b.textContent=c.used?(ok?'Ratio 100 ✓':`Ratio ${fmtR(c.sr)} (${c.sr<100?'short '+fmtR(100-c.sr):'over '+fmtR(c.sr-100)})`):'Not scheduled'}
+function renderPlants(){
+  $('#pL').innerHTML=PL.filter(p=>p.s==='L').map(card).join('');
+  $('#pR').innerHTML=PL.filter(p=>p.s==='R').map(card).join('');
+  let dl=$('#dlFaces');if(!dl){dl=document.createElement('datalist');dl.id='dlFaces';document.body.appendChild(dl)}
+  dl.innerHTML=S.inv.map(f=>`<option value="${esc(f.name)}">`).join('');
+  PL.forEach(updTot);
+}
+function plantEv(e,type){
+  const cd=e.target.closest('.card');if(!cd)return;const p=PL.find(x=>x.k===cd.dataset.p),st=S.plants[p.k];
+  if(e.target.hasAttribute('data-alt')){st.alt=e.target.value;save();return}
+  if(type==='click'){
+    if(e.target.hasAttribute('data-add')){st.rows.push({fid:'',ratio:null,ov:{}});save();cd.outerHTML=card(p);updTot(p);return}
+    if(e.target.hasAttribute('data-del')){st.rows.splice(+e.target.closest('tr').dataset.i,1);save();cd.outerHTML=card(p);updTot(p);return}
+    return}
+  const tr=e.target.closest('tr[data-i]');if(!tr)return;const r=st.rows[+tr.dataset.i],k=e.target.dataset.f;
+  if(k==='fid'){if(type!=='change')return;r.fid=e.target.value;r.ov={};save();cd.outerHTML=card(p);updTot(p);return}
+  if(type!=='input')return;
+  if(k==='ratio'){r.ratio=num(e.target.value)}
+  else{const f=inv(r.fid)||{};const base=f[k];const v=k==='ore'?e.target.value:num(e.target.value);
+    if(e.target.value===''||v===base||(k==='ore'&&v===(base||''))){delete r.ov[k];e.target.classList.remove('ov')}else{r.ov[k]=v;e.target.classList.add('ov')}}
+  save();updTot(p);
+}
+['input','change','click'].forEach(t=>$('#t-plants').addEventListener(t,e=>plantEv(e,t)));
+$('#clrPlants').onclick=e=>{if(!e.target.dataset.sure){e.target.dataset.sure=1;e.target.textContent='Click again to clear';setTimeout(()=>{e.target.textContent='Clear all plants';delete e.target.dataset.sure},3000);return}
+  PL.forEach(p=>S.plants[p.k]={rows:blankRows(),alt:''});save();renderPlants();e.target.textContent='Clear all plants';delete e.target.dataset.sure};
+$('#loadSample').onclick=()=>{
+  const need=seedInv();need.forEach(n=>{if(!S.inv.some(f=>f.name===n.name))S.inv.push(n)});
+  const id=n=>S.inv.find(f=>f.name===n).id;
+  const R=(n,r,ov={})=>({fid:id(n),ratio:r,ov});
+  const s={wet:[R('H6-672 (face)',35),R('K-702/714',35),R('Jig SY',30)],
+    ndcmp:[R('K-690',60),R('WP-516',40)],
+    iopph:[R('H6-672 (face)',45),R('Jig SY',30),R('P4-658',25,{Fe:60,SiO2:3.5,Al2O3:4.3,P:.12,K2O:.03})],
+    ioppj:[R('Jig SY',30),R('K-702/714',70)],
+    csnim:[R('WP-516',20),R('K-702/714',30),R('K-690',30),R('H6-672 (face)',20,{Fe:61.5,SiO2:2.4,Al2O3:3.9})],
+    metnim:[R('WP-516',100)],
+    sandktm:[R('K-690',50,{ore:'HO+BD'}),R('K-702/714',50)],
+    metktm:[R('P4-658',25),R('K-690',30),R('K-702/714',45)]};
+  PL.forEach(p=>S.plants[p.k]={rows:s[p.k],alt:''});
+  S.date='2026-11-18';S.shift='C';S.inc='Tiyasa';syncHeader();save();renderPlants();msg('Sample loaded')};
+
+/* ---------- output model ---------- */
+const C=(t,o={})=>({t:t??'',s:o.s||1,bg:o.bg||'',b:!!o.b,c:o.c||'',nb:!!o.nb,al:o.al||'c',d:o.d});
+function block(p){
+  const n=3+p.an.length,st=S.plants[p.k],bg=p.c,rows=[];
+  rows.push([C(p.n,{s:n,bg,b:1})]);
+  rows.push([C('Area/Face',{bg,b:1}),C('Ore Type',{bg,b:1}),C('Ratio',{bg,b:1}),C('Suggested Analysis (%)',{s:p.an.length,bg,b:1})]);
+  rows.push([C('',{bg}),C('',{bg}),C('',{bg}),...p.an.map(a=>C(a,{bg,b:1}))]);
+  const used=st.rows.filter(r=>r.fid);
+  used.forEach(r=>{const d=rowData(r,p);rows.push([C(d.name),C(d.ore),C(fmtR(d.ratio)),...p.an.map(a=>C(fmt(d[a],a),{d:DEC[a]}))])});
+  for(let i=used.length;i<4;i++)rows.push(Array.from({length:n},()=>C('')));
+  const c=calc(p);
+  rows.push([C('Total/Avg =',{s:2,b:1,bg}),C(c.used?fmtR(c.sr):'',{b:1,bg,c:c.used&&Math.abs(c.sr-100)>1e-6?'#c00000':''}),...p.an.map(a=>C(fmt(c.avg[a],a),{b:1,bg,d:DEC[a]}))]);
+  if(p.alt)rows.push([C('Alternate Face',{s:2,b:1}),C(st.alt,{s:n-2,b:1,c:'#e00000'})]);
+  rows.push([C('',{s:n,nb:1})]);
+  return rows;
+}
+function model(){
+  const L=[[C('NRD In-charge',{s:2,b:1}),C((S.inc||'').toUpperCase(),{s:6,b:1})],[C('Departmental Plant',{s:8,b:1,bg:'#fff2cc'})]];
+  const R=[[C('',{s:7,nb:1})],[C('Out Sourced Plant',{s:7,b:1,bg:'#fff2cc'})]];
+  PL.forEach(p=>(p.s==='L'?L:R).push(...block(p)));
+  while(L.length<R.length)L.push([C('',{s:8,nb:1})]);
+  while(R.length<L.length)R.push([C('',{s:7,nb:1})]);
+  while(L.length&&L[L.length-1][0].nb&&R[R.length-1][0].nb){L.pop();R.pop()}
+  return{L,R};
+}
+
+/* ---------- image ---------- */
+const WL=[118,72,50,60,60,60,60,60],WR=[118,72,50,62,62,62,62],WD=30,WS=26,GAP=16,RH=21,PAD=6;
+function drawImg(){
+  const {L,R}=model(),W=PAD*2+WD+WS+WL.reduce((a,b)=>a+b)+GAP+WR.reduce((a,b)=>a+b),H=PAD*2+L.length*RH,sc=2;
+  const cv=document.createElement('canvas');cv.width=W*sc;cv.height=H*sc;const g=cv.getContext('2d');g.scale(sc,sc);
+  g.fillStyle='#fff';g.fillRect(0,0,W,H);g.lineWidth=.8;g.strokeStyle='#000';g.textBaseline='middle';
+  const txt=(t,x,y,w,b,col,al)=>{if(!t)return;let fs=11.5;g.fillStyle=col||'#000';do{g.font=`${b?'bold ':''}${fs}px Arial`;fs-=.5}while(g.measureText(t).width>w-6&&fs>7);
+    g.textAlign=al==='l'?'left':'center';g.fillText(t,al==='l'?x+4:x+w/2,y+RH/2+.5)};
+  // date & shift columns
+  const top=PAD,h=L.length*RH;let x=PAD;
+  g.strokeRect(x,top,WD,h);g.save();g.translate(x+WD/2,top+h/2);g.rotate(-Math.PI/2);g.font='bold 12px Arial';g.textAlign='center';g.fillStyle='#000';g.fillText(S.date||'',0,1);g.restore();x+=WD;
+  g.strokeRect(x,top,WS,h);g.font='bold 14px Arial';g.textAlign='center';g.fillText(S.shift||'',x+WS/2,top+h/2);x+=WS;
+  const side=(rows,ws,x0)=>rows.forEach((row,ri)=>{let cx=x0,ci=0;const y=top+ri*RH;row.forEach(c=>{const w=ws.slice(ci,ci+c.s).reduce((a,b)=>a+b,0);
+    if(!c.nb){g.fillStyle=c.bg||'#fff';g.fillRect(cx,y,w,RH);g.strokeStyle='#000';g.strokeRect(cx,y,w,RH);txt(c.t,cx,y,w,c.b,c.c,c.al)}cx+=w;ci+=c.s})});
+  side(L,WL,x);side(R,WR,x+WL.reduce((a,b)=>a+b)+GAP);
+  return cv;
+}
+let lastBlob=null;
+function fname(){return `Feed_Schedule_${S.date||''}_${S.shift||''}.png`}
+async function getBlob(){const cv=drawImg();return new Promise(r=>cv.toBlob(r,'image/png'))}
+
+/* ---------- excel ---------- */
+function xlHTML(ds){
+  const {L,R}=model(),n=L.length,cols=[...(ds?[WD,WS]:[]),...WL,GAP,...WR];
+  const st=c=>`border:${c.nb?'none':'0.5pt solid #000'};background:${c.nb?'#fff':(c.bg||'#fff')};${c.b?'font-weight:bold;':''}${c.c?'color:'+c.c+';':''}text-align:center;font-family:Arial;font-size:9pt;padding:1px 4px;white-space:nowrap;${c.d?`mso-number-format:'${c.d===3?'0.000':'0.00'}';`:''}`;
+  const td=c=>`<td${c.s>1?` colspan="${c.s}"`:''} style="${st(c)}">${esc(c.t)}</td>`;
+  let h=`<table style="border-collapse:collapse"><colgroup>${cols.map(w=>`<col width="${w}" style="width:${w}px">`).join('')}</colgroup>`;
+  for(let i=0;i<n;i++){h+='<tr style="height:16pt">';
+    if(ds&&i===0)h+=`<td rowspan="${n}" style="border:0.5pt solid #000;font-weight:bold;text-align:center;vertical-align:middle;font-family:Arial;font-size:10pt;mso-rotate:90;writing-mode:vertical-rl;transform:rotate(180deg)">${esc(S.date)}</td><td rowspan="${n}" style="border:0.5pt solid #000;font-weight:bold;text-align:center;vertical-align:middle;font-family:Arial;font-size:11pt">${esc(S.shift)}</td>`;
+    h+=L[i].map(td).join('')+'<td style="border:none"></td>'+R[i].map(td).join('')+'</tr>'}
+  return h+'</table>';
+}
+function tsv(ds){const {L,R}=model();const cells=row=>row.flatMap(c=>[c.t,...Array(c.s-1).fill('')]);
+  return L.map((l,i)=>[...(ds?(i===0?[S.date,S.shift]:['','']):[]),...cells(l),'',...cells(R[i])].join('\t')).join('\n')}
+
+async function renderOut(){
+  const ds=$('#incDS').checked;$('#xl').innerHTML=xlHTML(ds);$('#tsv').value=tsv(ds);
+  lastBlob=await getBlob();const old=$('#imgPrev').src;$('#imgPrev').src=URL.createObjectURL(lastBlob);if(old.startsWith('blob:'))URL.revokeObjectURL(old);
+  const warn=PL.filter(p=>{const c=calc(p);return c.used&&Math.abs(c.sr-100)>1e-6}).map(p=>p.n);
+  if(warn.length)msg('Ratio not 100 in: '+warn.join(', '));
+}
+$('#incDS').onchange=renderOut;
+function fallbackCopy(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);let ok=false;try{ok=document.execCommand('copy')}catch(e){}s.removeAllRanges();return ok}
+$('#xlCopy').onclick=async()=>{const ds=$('#incDS').checked,h=xlHTML(ds),t=tsv(ds);
+  try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([h],{type:'text/html'}),'text/plain':new Blob([t],{type:'text/plain'})})]);msg('Copied — paste into Excel at the schedule start cell')}
+  catch(e){msg(fallbackCopy($('#xl'))?'Copied — paste into Excel':'Copy blocked here — select the table and press Ctrl+C')}};
+$('#tsvCopy').onclick=async()=>{try{await navigator.clipboard.writeText($('#tsv').value);msg('Values copied')}catch(e){const t=$('#tsv');t.parentElement.open=true;t.select();msg(document.execCommand('copy')?'Values copied':'Press Ctrl+C to copy')}};
+$('#imgDl').onclick=async()=>{const b=lastBlob||await getBlob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fname();document.body.appendChild(a);a.click();a.remove();msg('Downloading '+fname()+' — if nothing happens, right-click / long-press the image to save')};
+$('#imgCopy').onclick=async()=>{try{const b=lastBlob||await getBlob();await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);msg('Image copied — paste into WhatsApp / Teams / mail')}catch(e){msg('Copy blocked here — right-click / long-press the image → Copy')}};
+$('#imgShare').onclick=async()=>{try{const b=lastBlob||await getBlob();const f=new File([b],fname(),{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:`Feed Schedule ${S.date} ${S.shift}`});}else throw 0}
+  catch(e){if(e&&e.name==='AbortError')return;msg('Sharing not available here — use Download or long-press the image')}};
+
+/* ---------- history ---------- */
+const H=()=>{try{return JSON.parse(localStorage.getItem(HKEY))||[]}catch(e){return[]}};
+const setH=h=>{try{localStorage.setItem(HKEY,JSON.stringify(h))}catch(e){msg('Could not save in this browser')}};
+function renderHist(){const h=H();$('#histT tbody').innerHTML=h.map((x,i)=>`<tr><td>${esc(x.s.date)}</td><td><b>${esc(x.s.shift)}</b></td><td>${esc(x.s.inc)}</td><td class="hint">${esc(x.at)}</td>
+  <td><button class="btn sm" data-ld="${i}">Load</button> <button class="x" data-dl="${i}">✕</button></td></tr>`).join('')||`<tr><td colspan="5" class="hint" style="padding:14px">Nothing saved yet.</td></tr>`}
+$('#hSave').onclick=()=>{const h=H().filter(x=>!(x.s.date===S.date&&x.s.shift===S.shift));h.unshift({at:new Date().toLocaleString(),s:JSON.parse(JSON.stringify(S))});setH(h.slice(0,60));renderHist();msg(`Saved ${S.date} shift ${S.shift}`)};
+$('#histT').onclick=e=>{const h=H();if(e.target.dataset.ld){S=JSON.parse(JSON.stringify(h[+e.target.dataset.ld].s));save();syncHeader();msg(`Loaded ${S.date} ${S.shift}`);showTab('plants')}
+  if(e.target.dataset.dl){h.splice(+e.target.dataset.dl,1);setH(h);renderHist()}};
+$('#hNext').onclick=()=>{const o=['A','B','C'],i=o.indexOf(S.shift);if(i===2){const d=new Date(S.date+'T00:00:00');d.setDate(d.getDate()+1);S.date=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');S.shift='A'}else S.shift=o[i+1];
+  save();syncHeader();msg(`Now on ${S.date} shift ${S.shift} — plant feed carried forward`);showTab('plants')};
+$('#bkOut').onclick=()=>{$('#bkTxt').value=JSON.stringify({state:S,hist:H()});$('#bkTxt').select()};
+$('#bkIn').onclick=()=>{try{const o=JSON.parse($('#bkTxt').value);if(!o.state||!o.state.inv)throw 0;S=o.state;if(o.hist)setH(o.hist);save();syncHeader();renderHist();msg('Restored')}catch(e){msg('Not a valid backup text')}};
+
+syncHeader();renderInv();
+if('serviceWorker' in navigator&&location.protocol==='https:'){try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}}
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="0" fill="#1d4e89"/>
+  <!-- calendar body -->
+  <rect x="96" y="120" width="320" height="300" rx="26" fill="#ffffff"/>
+  <!-- header band (iron-ore rust) -->
+  <path d="M96 146a26 26 0 0 1 26-26h268a26 26 0 0 1 26 26v50H96z" fill="#b5532a"/>
+  <!-- rings -->
+  <rect x="160" y="92" width="26" height="62" rx="13" fill="#e8edf3"/>
+  <rect x="326" y="92" width="26" height="62" rx="13" fill="#e8edf3"/>
+  <!-- schedule rows in plant colours -->
+  <rect x="124" y="222" width="70" height="36" rx="6" fill="#d8e4bc"/>
+  <rect x="204" y="222" width="184" height="36" rx="6" fill="#d8e4bc"/>
+  <rect x="124" y="268" width="70" height="36" rx="6" fill="#b7dee8"/>
+  <rect x="204" y="268" width="184" height="36" rx="6" fill="#b7dee8"/>
+  <rect x="124" y="314" width="70" height="36" rx="6" fill="#c9c9c9"/>
+  <rect x="204" y="314" width="120" height="36" rx="6" fill="#c9c9c9"/>
+  <rect x="124" y="360" width="70" height="36" rx="6" fill="#fff2cc"/>
+  <rect x="204" y="360" width="90" height="36" rx="6" fill="#fff2cc"/>
+  <!-- tick badge -->
+  <circle cx="372" cy="372" r="58" fill="#15803d" stroke="#ffffff" stroke-width="12"/>
+  <path d="M344 372l20 20 36-40" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
